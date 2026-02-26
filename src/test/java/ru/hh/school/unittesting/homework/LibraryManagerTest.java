@@ -3,6 +3,8 @@ package ru.hh.school.unittesting.homework;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -122,21 +124,14 @@ class LibraryManagerTest {
         assertThrows(IllegalArgumentException.class, () -> libraryManager.calculateDynamicLateFee(-1, false, false));
     }
 
-    @Test
-    void shouldAddFeeWhenBookIsBestseller() {
-        double bestsellerFee = libraryManager.calculateDynamicLateFee(14, true, false);
-        assertEquals(10.5, bestsellerFee, 0.001);
-    }
-
-    @Test
-    void shouldAddDiscountFeeWhenUserIsPremiumMember() {
-        double discountFee = libraryManager.calculateDynamicLateFee(14, false, true);
-        assertEquals(5.6, discountFee, 0.001);
-    }
-
-    @Test
-    void shouldCalculateLateFeeWhenNoBestsellerAndNoPremium() {
-        double basicLateFee = libraryManager.calculateDynamicLateFee(14, false, false);
-        assertEquals(7, basicLateFee, 0.001);
+    @ParameterizedTest
+    @CsvSource({
+            "14, true, false, 10.5",
+            "14, false, true, 5.6",
+            "14, false, false, 7"
+    })
+    void testCalculateDynamicLateFeeWithParams(int overdueDays, boolean bestseller, boolean premiumUser, double expectedLateFee) {
+        double actualLateFee = libraryManager.calculateDynamicLateFee(overdueDays, bestseller, premiumUser);
+        assertEquals(expectedLateFee, actualLateFee, 0.001);
     }
 }
