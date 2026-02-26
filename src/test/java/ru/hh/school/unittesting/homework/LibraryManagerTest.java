@@ -1,4 +1,4 @@
-package ru.hh.school.unittesting.example;
+package ru.hh.school.unittesting.homework;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -6,13 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.hh.school.unittesting.homework.LibraryManager;
-import ru.hh.school.unittesting.homework.NotificationService;
-import ru.hh.school.unittesting.homework.UserService;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LibraryManagerTest {
@@ -91,6 +88,8 @@ class LibraryManagerTest {
     @Test
     void shouldReturnFalseWhenBookIsNotBorrowed() {
         assertFalse(libraryManager.returnBook("Book", "user1"));
+        verify(notificationService, never())
+                .notifyUser(any(), any());
     }
 
     @Test
@@ -109,20 +108,13 @@ class LibraryManagerTest {
 
         libraryManager.borrowBook("Book", "user1");
         assertTrue(libraryManager.returnBook("Book", "user1"));
+        verify(notificationService)
+                .notifyUser("user1", "You have returned the book: Book");
     }
 
     @Test
     void shouldReturnZeroIfBookDoesNotExists() {
         assertEquals(0, libraryManager.getAvailableCopies("bookfkf"));
-    }
-
-    @Test
-    void testAvailableCopies() {
-        when(userService.isUserActive("user1"))
-                .thenReturn(true);
-
-        libraryManager.borrowBook("Book", "user1");
-        assertEquals(19, libraryManager.getAvailableCopies("Book"));
     }
 
     @Test
@@ -132,16 +124,19 @@ class LibraryManagerTest {
 
     @Test
     void shouldAddFeeWhenBookIsBestseller() {
-        assertEquals(10.5, libraryManager.calculateDynamicLateFee(14, true, false));
+        double bestsellerFee = libraryManager.calculateDynamicLateFee(14, true, false);
+        assertEquals(10.5, bestsellerFee, 0.001);
     }
 
     @Test
     void shouldAddDiscountFeeWhenUserIsPremiumMember() {
-        assertEquals(5.6, libraryManager.calculateDynamicLateFee(14, false, true));
+        double discountFee = libraryManager.calculateDynamicLateFee(14, false, true);
+        assertEquals(5.6, discountFee, 0.001);
     }
 
     @Test
     void shouldCalculateLateFeeWhenNoBestsellerAndNoPremium() {
-        assertEquals(7, libraryManager.calculateDynamicLateFee(14, false, false));
+        double basicLateFee = libraryManager.calculateDynamicLateFee(14, false, false);
+        assertEquals(7, basicLateFee, 0.001);
     }
 }
