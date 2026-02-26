@@ -68,12 +68,18 @@ class LibraryManagerTest {
     }
 
     @Test
-    void shouldAddRecordWithBorrowedBook() {
+    void shouldReturnTrueIfBookIsBorrowedByUserAndNotifyUser() {
         when(userService.isUserActive("user1"))
                 .thenReturn(true);
 
         libraryManager.borrowBook("Book", "user1");
+
+        assertEquals(19, libraryManager.getAvailableCopies("Book"));
         assertTrue(libraryManager.returnBook("Book", "user1"));
+        assertEquals(20, libraryManager.getAvailableCopies("Book"));
+
+        verify(notificationService)
+                .notifyUser("user1", "You have returned the book: Book");
     }
 
     @Test
@@ -104,18 +110,7 @@ class LibraryManagerTest {
     }
 
     @Test
-    void shouldReturnTrueIfBookIsBorrowedByUser() {
-        when(userService.isUserActive("user1"))
-                .thenReturn(true);
-
-        libraryManager.borrowBook("Book", "user1");
-        assertTrue(libraryManager.returnBook("Book", "user1"));
-        verify(notificationService)
-                .notifyUser("user1", "You have returned the book: Book");
-    }
-
-    @Test
-    void shouldReturnZeroIfBookDoesNotExists() {
+    void shouldReturnZeroIfBookDoesNotExist() {
         assertEquals(0, libraryManager.getAvailableCopies("bookfkf"));
     }
 
@@ -128,7 +123,9 @@ class LibraryManagerTest {
     @CsvSource({
             "14, true, false, 10.5",
             "14, false, true, 5.6",
-            "14, false, false, 7"
+            "14, false, false, 7",
+            "0, false, false, 0",
+            "14, true, true, 8.4"
     })
     void testCalculateDynamicLateFeeWithParams(int overdueDays, boolean bestseller, boolean premiumUser, double expectedLateFee) {
         double actualLateFee = libraryManager.calculateDynamicLateFee(overdueDays, bestseller, premiumUser);
